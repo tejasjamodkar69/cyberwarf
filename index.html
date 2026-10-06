@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Fraud Money-Mule Tracing System</title>
+    <style>
+        :root {
+            --bg-color: #f7faf8;
+            --card-bg: #ffffff;
+            --text-primary: #12332b;
+            --text-secondary: #52756b;
+            --text-muted: #8ca89f;
+            --mint-main: #3ecfa4;
+            --mint-dark: #2ab58c;
+            --mint-light: #eefbf7;
+            --mint-border: #c4eedf;
+            --border-color: #e2ece8;
+            --danger-bg: #fdf2f2;
+            --danger-text: #9b1c1c;
+            --danger-border: #f8b4b4;
+            --in-color: #059669;
+            --out-color: #d97706;
+            --radius: 12px;
+            --shadow: 0 4px 18px rgba(18, 51, 43, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Header & Status Bar */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(18, 51, 43, 0.03);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 34px;
+            height: 34px;
+            background-color: var(--mint-main);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .status-val {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .badge-empty {
+            color: #b45309;
+            background-color: #fef3c7;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-loaded {
+            color: #065f46;
+            background-color: #d1fae5;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-reset {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+            border-color: var(--danger-border);
+        }
+
+        /* Navigation Tabs */
+        nav {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 28px;
+            display: flex;
+            gap: 24px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 14px 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--mint-main);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* Main Body Area */
+        main {
+            flex: 1;
+            padding: 24px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Card Elements */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            background-color: var(--bg-color);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--mint-main);
+            background-color: #ffffff;
+        }
+
+        .btn-primary {
+            background-color: var(--mint-main);
+            color: #12332b;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--mint-dark);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--mint-light);
+            border-color: var(--mint-border);
+        }
+
+        .btn-report {
+            background-color: #12332b;
+            color: #ffffff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-report:hover {
+            background-color: #1e4d41;
+        }
+
+        /* Progress Chips */
+        .chips-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .chip.active {
+            border-color: var(--mint-main);
+            background-color: var(--mint-light);
+            color: var(--text-primary);
+            box-shadow: 0 0 10px rgba(62, 207, 164, 0.3);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        .chip.completed {
+            border-color: var(--mint-main);
+            background-color: var(--mint-main);
+            color: #12332b;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.03); }
+        }
+
+        .timer-box {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Metrics & Summary Grid */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            border-radius: 8px;
+        }
+
+        .metric-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .stage-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .stage-table th, .stage-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stage-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            background-color: var(--bg-color);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius);
+        }
+
+        .empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            color: var(--text-muted);
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* Error Banner */
+        .error-card {
+            background-color: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger-text);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .error-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        /* Badges */
+        .badge-in { background-color: #d1fae5; color: #065f46; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+        .badge-out { background-color: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+        .badge-resolved { background-color: var(--mint-light); color: var(--text-primary); border: 1px solid var(--mint-border); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-cashout { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+        .badge-layer { background-color: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+
+        .band-Critical { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; padding: 3px 10px; border-radius: 12px; font-weight: 800; font-size: 11px; }
+        .band-High { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; padding: 3px 10px; border-radius: 12px; font-weight: 800; font-size: 11px; }
+        .band-Medium { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 3px 10px; border-radius: 12px; font-weight: 800; font-size: 11px; }
+        .band-Low { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 12px; font-weight: 800; font-size: 11px; }
+
+        .time-pill {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Red Flags List */
+        .flags-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .flag-item { background-color: var(--bg-color); border: 1px solid var(--border-color); border-left: 4px solid var(--mint-main); padding: 8px 12px; border-radius: 6px; font-size: 12px; }
+        .flag-code { font-weight: 700; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+        .flag-pts { background-color: #ffffff; border: 1px solid var(--border-color); padding: 1px 5px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #dc2626; }
+        .flag-reason { color: var(--text-secondary); line-height: 1.3; }
+
+        .suggestion-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .suggestion-pill { background-color: #ffffff; border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 14px; font-size: 12px; font-weight: 600; color: var(--text-primary); cursor: pointer; transition: all 0.2s; }
+        .suggestion-pill:hover { border-color: var(--mint-main); background-color: var(--mint-light); color: var(--mint-dark); }
+
+        .table-container { max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 12px; }
+        .txn-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .txn-table th { position: sticky; top: 0; background-color: #f1f6f4; color: var(--text-primary); font-weight: 700; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border-color); z-index: 10; }
+        .txn-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; }
+        .txn-table tr:hover { background-color: var(--mint-light); }
+
+        .mono { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; }
+
+        /* Stage 5: Trace 3-Panel Layout */
+        .trace-workspace {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .svg-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            height: 520px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        svg#graphSvg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SVG Tooltip */
+        .svg-tooltip {
+            position: absolute;
+            background-color: #12332b;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Time Control Slider Bar */
+        .time-slider-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .btn-play {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--mint-main);
+            color: #12332b;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .btn-play:hover {
+            background-color: var(--mint-dark);
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--mint-main);
+            cursor: pointer;
+        }
+
+        .freeze-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .freeze-item {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .freeze-item:hover {
+            border-color: var(--mint-main);
+            background-color: var(--mint-light);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Header Status Bar -->
+    <header>
+        <div class="brand">
+            <div class="brand-logo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+            </div>
+            <div class="brand-title">CYBER FRAUD MULE TRACER</div>
+        </div>
+
+        <div class="header-status" id="headerStatus">
+            <span class="badge-empty" id="statusBadge">No Dataset Loaded</span>
+            <div class="status-item hidden" id="headerDatasetItem">
+                <span class="status-label">Dataset:</span>
+                <span class="status-val" id="headerDatasetName">-</span>
+            </div>
+            <div class="status-item hidden" id="headerRowsItem">
+                <span class="status-label">Rows:</span>
+                <span class="status-val" id="headerRowsCount">-</span>
+            </div>
+            <div class="status-item hidden" id="headerTimeItem">
+                <span class="status-label">Loaded in:</span>
+                <span class="status-val" id="headerLoadTime">-</span>
+            </div>
+            <button class="btn-reset hidden" id="btnReset" onclick="resetDataset()">Reset</button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav>
+        <button class="tab-btn active" onclick="switchTab('loaderTab', this)">LOADER</button>
+        <button class="tab-btn" onclick="switchTab('searchTab', this)">SEARCH</button>
+        <button class="tab-btn" onclick="switchTab('traceTab', this)">TRACE</button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+
+        <!-- STAGE 1: LOADER TAB -->
+        <div id="loaderTab" class="tab-content active">
+            <div class="card">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Load Transaction Dataset CSV
+                </div>
+
+                <div class="form-group">
+                    <label for="filePathInput">Windows Full File Path or File Selection</label>
+                    <div class="input-row">
+                        <input type="text" id="filePathInput" placeholder="C:\Users\username\file.csv" value="C:\Users\vaish\cyberhack\data\uploads\VoidHacks8_MuleAccount_2M_Transactions.csv">
+                        <input type="file" id="fileChooser" accept=".csv" class="hidden" onchange="handleFileSelect(this)">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('fileChooser').click()">Browse...</button>
+                        <button type="button" class="btn-primary" id="btnLoad" onclick="startIngestion()">Load Dataset</button>
+                    </div>
+                </div>
+
+                <div id="progressSection" class="hidden">
+                    <div class="timer-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span id="liveTimer">0.0 s</span>
+                        <span class="timer-label" id="currentStageLabel">(Initializing...)</span>
+                    </div>
+
+                    <div class="chips-container">
+                        <div class="chip" id="chip-Uploading">
+                            <span class="chip-icon">1</span> Uploading
+                        </div>
+                        <div class="chip" id="chip-Reading">
+                            <span class="chip-icon">2</span> Reading & Normalizing
+                        </div>
+                        <div class="chip" id="chip-Indexing">
+                            <span class="chip-icon">3</span> Indexing
+                        </div>
+                        <div class="chip" id="chip-Fingerprinting">
+                            <span class="chip-icon">4</span> Fingerprinting
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorBanner" class="error-card hidden">
+                <div class="error-title">Ingestion Error</div>
+                <div id="errorMessage">An unexpected error occurred.</div>
+            </div>
+
+            <div id="summaryCard" class="card hidden">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Ingestion Summary
+                </div>
+
+                <div class="summary-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">FILE NAME</div>
+                        <div class="metric-value" id="sumFileName">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">TOTAL ROWS</div>
+                        <div class="metric-value" id="sumRows">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">DISTINCT ACCOUNTS</div>
+                        <div class="metric-value" id="sumAccounts">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">DUPLICATE TXN IDs</div>
+                        <div class="metric-value" id="sumDuplicates">-</div>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="metric-card" style="grid-column: span 2;">
+                        <div class="metric-title">DATE RANGE</div>
+                        <div class="metric-value" id="sumDateRange" style="font-size: 15px;">-</div>
+                    </div>
+                    <div class="metric-card" style="grid-column: span 2;">
+                        <div class="metric-title">FILE SHA-256</div>
+                        <div class="metric-value" id="sumSha256" style="font-size: 13px; font-family: monospace;">-</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <div class="metric-title" style="margin-bottom: 8px;">PER-STAGE TIMINGS</div>
+                    <table class="stage-table">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th>Duration (seconds)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stageTimingsBody">
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; background-color: var(--mint-light);">
+                                <td>Total Ingestion Time</td>
+                                <td id="sumTotalTime">-</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- STAGE 2 & 4: SEARCH TAB -->
+        <div id="searchTab" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Search Account or Transaction ID
+                </div>
+
+                <div class="form-group">
+                    <label for="searchInput">Account ID (e.g. KKBK10000000) or Transaction ID (e.g. TXN401119292)</label>
+                    <div class="input-row">
+                        <input type="text" id="searchInput" placeholder="Enter Account ID or Transaction ID..." onkeypress="if(event.key==='Enter') executeSearch()">
+                        <button class="btn-primary" id="btnSearch" onclick="executeSearch()">Search</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-secondary);">
+                    <span>Quick Try:</span>
+                    <span class="suggestion-pill" onclick="quickSearch('ICIC10000335')">ICIC10000335</span>
+                    <span class="suggestion-pill" onclick="quickSearch('AIRP10001372')">AIRP10001372</span>
+                    <span class="suggestion-pill" onclick="quickSearch('KKBK10000000')">KKBK10000000</span>
+                    <span class="suggestion-pill" onclick="quickSearch('TXN401119292')">TXN401119292 (Txn ID)</span>
+                </div>
+            </div>
+
+            <div id="searchEmptyState" class="empty-state hidden">
+                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <div class="empty-title">No Dataset Loaded</div>
+                <div class="empty-desc">Please go to the Loader tab and ingest a transaction CSV dataset first.</div>
+                <button class="btn-primary" onclick="switchTab('loaderTab', document.querySelectorAll('.tab-btn')[0])">Go to Loader</button>
+            </div>
+
+            <div id="searchNotFoundCard" class="error-card hidden" style="background-color: #fffbebf; border-color: #fde68a; color: #92400e;">
+                <div class="error-title" id="notFoundTitle">No Record Found</div>
+                <div id="notFoundDesc">No transactions found matching your search.</div>
+                <div style="margin-top: 10px; font-weight: 600;">Did you mean one of these matching prefixes?</div>
+                <div class="suggestion-pills" id="suggestionPillsContainer"></div>
+            </div>
+
+            <div id="searchResultsSection" class="hidden">
+                <div class="card" style="padding-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <h2 id="resAccountTitle" style="font-size: 20px; font-weight: 800; color: var(--text-primary);">-</h2>
+                            <span id="resResolvedBadge" class="badge-resolved hidden">-</span>
+                            <span id="resRiskBadge" class="band-Low">Risk: 0 (Low)</span>
+                        </div>
+                        <div class="time-pill" id="resTimeMs">Search time: 0 ms</div>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="metric-card">
+                            <div class="metric-title">TOTAL RECEIVED (IN)</div>
+                            <div class="metric-value" id="resTotalIn" style="color: var(--in-color);">-</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="resCountIn">0 txns</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">TOTAL SENT (OUT)</div>
+                            <div class="metric-value" id="resTotalOut" style="color: var(--out-color);">-</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="resCountOut">0 txns</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">NET FLOW</div>
+                            <div class="metric-value" id="resNetFlow">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">DISTINCT COUNTERPARTIES</div>
+                            <div class="metric-value" id="resCounterparties">-</div>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid" style="grid-template-columns: 1fr;">
+                        <div class="metric-card">
+                            <div class="metric-title">ACTIVITY WINDOW</div>
+                            <div class="metric-value" id="resActivityWindow" style="font-size: 14px;">-</div>
+                        </div>
+                    </div>
+
+                    <div id="resFlagsCard" class="hidden" style="margin-top: 16px;">
+                        <div class="metric-title" style="margin-bottom: 8px; font-weight: 700; color: var(--text-primary);">TRIGGERED RED FLAGS & RISK BREAKDOWN</div>
+                        <div class="flags-list" id="resFlagsContainer"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title" style="justify-content: space-between;">
+                        <span>Recent Transactions (Up to 500)</span>
+                        <span id="resTxnCountBadge" style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Showing 0 records</span>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="txn-table">
+                            <thead>
+                                <tr>
+                                    <th>Txn ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Dir</th>
+                                    <th>Counterparty Account</th>
+                                    <th>IFSC</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Mode</th>
+                                    <th>Narration</th>
+                                    <th>IP Address</th>
+                                    <th>Device</th>
+                                </tr>
+                            </thead>
+                            <tbody id="txnTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- STAGE 3, 4 & 5: TRACE TAB & GRAPH UI -->
+        <div id="traceTab" class="tab-content">
+            <div class="card">
+                <div class="card-title" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                        <span>Money-Mule Flow Tracing Engine</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="time-pill" id="traceHeaderPill">Trace ready</span>
+                        <button class="btn-report hidden" id="btnOpenReport" onclick="openCaseReport()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Case Diary + Notices
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="traceInput">Victim Account ID or Disputed Transaction ID</label>
+                    <div class="input-row">
+                        <input type="text" id="traceInput" placeholder="Enter Victim Account ID or Transaction ID..." onkeypress="if(event.key==='Enter') executeTrace()">
+                        <button class="btn-primary" id="btnTrace" onclick="executeTrace()">Trace Money Flow</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-secondary);">
+                    <span>Sample Victims (UPI/REF Fraud):</span>
+                    <span class="suggestion-pill" onclick="quickTrace('AXIS10000014')">AXIS10000014</span>
+                    <span class="suggestion-pill" onclick="quickTrace('AXIS10000023')">AXIS10000023</span>
+                    <span class="suggestion-pill" onclick="quickTrace('IPOS10000044')">IPOS10000044</span>
+                    <span class="suggestion-pill" onclick="quickTrace('PUNB10000047')">PUNB10000047</span>
+                    <span class="suggestion-pill" onclick="quickTrace('PYTM10000070')">PYTM10000070</span>
+                </div>
+            </div>
+
+            <div id="traceEmptyState" class="empty-state hidden">
+                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                <div class="empty-title">No Dataset Loaded</div>
+                <div class="empty-desc">Please go to the Loader tab and ingest a transaction CSV dataset first.</div>
+                <button class="btn-primary" onclick="switchTab('loaderTab', document.querySelectorAll('.tab-btn')[0])">Go to Loader</button>
+            </div>
+
+            <div id="traceWorkspaceSection" class="hidden">
+                <!-- 3-PANEL GRAPH LAYOUT -->
+                <div class="trace-workspace">
+
+                    <!-- LEFT PANEL -->
+                    <div class="left-panel">
+                        <!-- Case Summary -->
+                        <div class="card" style="padding: 16px;">
+                            <div class="card-title" style="font-size: 14px; margin-bottom: 12px;">Case Summary</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">VICTIM ACCOUNT</div>
+                            <div id="leftVictimId" class="mono" style="font-weight: 800; font-size: 14px; margin-bottom: 10px;">-</div>
+
+                            <div style="font-size: 12px; color: var(--text-muted);">TOTAL SIPHONED</div>
+                            <div id="leftAmtSent" style="font-weight: 800; font-size: 15px; color: var(--out-color); margin-bottom: 10px;">₹0.00</div>
+
+                            <div style="font-size: 12px; color: var(--text-muted);">AT CASHOUT NODES</div>
+                            <div id="leftAmtCashout" style="font-weight: 800; font-size: 15px; color: #9b1c1c; margin-bottom: 10px;">₹0.00</div>
+
+                            <div style="font-size: 12px; color: var(--text-muted);">STILL HELD IN MULES</div>
+                            <div id="leftAmtHeld" style="font-weight: 800; font-size: 15px; color: var(--in-color); margin-bottom: 10px;">₹0.00</div>
+
+                            <div style="font-size: 12px; color: var(--text-muted);">TOTAL NODES / EDGES</div>
+                            <div id="leftGraphCount" style="font-weight: 700; font-size: 13px;">0 / 0</div>
+                        </div>
+
+                        <!-- Accounts Per Layer -->
+                        <div class="card" style="padding: 16px;">
+                            <div class="card-title" style="font-size: 14px; margin-bottom: 10px;">Accounts per Layer</div>
+                            <div id="layerBreakdownContainer" style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;"></div>
+                        </div>
+
+                        <!-- Freeze First List -->
+                        <div class="card" style="padding: 16px;">
+                            <div class="card-title" style="font-size: 14px; margin-bottom: 10px;">
+                                <span>Freeze First List</span>
+                            </div>
+                            <div class="freeze-list" id="freezeFirstList"></div>
+                        </div>
+                    </div>
+
+                    <!-- CENTRE PANEL: SVG GRAPH & TIME REPLAY SLIDER -->
+                    <div class="center-panel">
+                        <div class="svg-container">
+                            <div id="svgTooltip" class="svg-tooltip">Tooltip</div>
+                            <svg id="graphSvg">
+                                <defs>
+                                    <marker id="arrowhead" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8ca89f" />
+                                    </marker>
+                                    <marker id="arrowhead-active" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3ecfa4" />
+                                    </marker>
+                                </defs>
+                                <g id="edgesGroup"></g>
+                                <g id="nodesGroup"></g>
+                            </svg>
+                        </div>
+
+                        <!-- Time Slider & Play Button -->
+                        <div class="time-slider-card">
+                            <button class="btn-play" id="btnPlay" onclick="togglePlayReplay()" title="Play / Pause Replay">▶</button>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">
+                                    <span>Time Slider (Minute-by-Minute Flow)</span>
+                                    <span id="sliderTimeLabel">All Time</span>
+                                </div>
+                                <input type="range" id="timeSlider" min="0" max="100" value="100" oninput="onSliderInput(this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT PANEL: CLICKED ACCOUNT DETAILS & RED FLAGS -->
+                    <div class="right-panel">
+                        <div class="card" style="padding: 16px;">
+                            <div class="card-title" style="font-size: 14px; justify-content: space-between;">
+                                <span>Account Details</span>
+                                <span id="rightRiskBadge" class="band-Low">Low</span>
+                            </div>
+
+                            <div id="rightAccountDetails">
+                                <div style="font-size: 12px; color: var(--text-muted);">ACCOUNT ID</div>
+                                <div id="rightAccId" class="mono" style="font-weight: 800; font-size: 15px; margin-bottom: 8px;">Select a Node</div>
+
+                                <div style="font-size: 12px; color: var(--text-muted);">BANK NAME</div>
+                                <div id="rightBankName" style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">-</div>
+
+                                <div style="font-size: 12px; color: var(--text-muted);">IFSC CODE</div>
+                                <div id="rightIfsc" class="mono" style="font-weight: 600; font-size: 12px; margin-bottom: 8px;">-</div>
+
+                                <div style="font-size: 12px; color: var(--text-muted);">LAYER / HOP</div>
+                                <div id="rightLayer" style="font-weight: 600; font-size: 12px; margin-bottom: 8px;">-</div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">RECEIVED</div>
+                                        <div id="rightAmtReceived" style="font-weight: 700; color: var(--in-color); font-size: 13px;">₹0.00</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">FORWARDED</div>
+                                        <div id="rightAmtForwarded" style="font-weight: 700; color: var(--out-color); font-size: 13px;">₹0.00</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 8px; margin-top: 14px;">
+                                <button class="btn-secondary" style="flex: 1; font-size: 11px;" onclick="isolateSelectedRing()">Isolate ring</button>
+                                <button class="btn-secondary" style="flex: 1; font-size: 11px;" onclick="resetIsolation()">Show all</button>
+                            </div>
+                        </div>
+
+                        <!-- Red Flags Box -->
+                        <div class="card" style="padding: 16px;">
+                            <div class="card-title" style="font-size: 14px; margin-bottom: 8px;">Triggered Red Flags</div>
+                            <div class="flags-list" id="rightFlagsList">
+                                <div style="font-size: 12px; color: var(--text-muted);">Click any node in the SVG graph to inspect its red flags.</div>
+                            </div>
+                        </div>
+
+                        <button class="btn-secondary" style="width: 100%; font-weight: 700;" onclick="exportTraceCSV()">Export Trace CSV</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let pollTimer = null;
+        let startTime = null;
+        let isDatasetLoaded = false;
+        let currentTraceData = null;
+        let selectedNodeId = null;
+
+        // Replay Timer Controls
+        let isPlaying = false;
+        let playInterval = null;
+        let traceTimestamps = [];
+
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+
+            if (tabId === 'searchTab') {
+                if (!isDatasetLoaded) {
+                    document.getElementById('searchEmptyState').classList.remove('hidden');
+                    document.getElementById('searchResultsSection').classList.add('hidden');
+                } else {
+                    document.getElementById('searchEmptyState').classList.add('hidden');
+                }
+            } else if (tabId === 'traceTab') {
+                if (!isDatasetLoaded) {
+                    document.getElementById('traceEmptyState').classList.remove('hidden');
+                    document.getElementById('traceWorkspaceSection').classList.add('hidden');
+                } else {
+                    document.getElementById('traceEmptyState').classList.add('hidden');
+                }
+            }
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.path) {
+                    document.getElementById('filePathInput').value = file.path;
+                } else {
+                    document.getElementById('filePathInput').value = file.name;
+                }
+            }
+        }
+
+        function startIngestion() {
+            const filePathInput = document.getElementById('filePathInput');
+            const fileChooser = document.getElementById('fileChooser');
+            const pathVal = filePathInput.value.trim();
+
+            if (!pathVal && (!fileChooser.files || !fileChooser.files[0])) {
+                alert('Please enter a valid Windows file path or select a CSV file.');
+                return;
+            }
+
+            document.getElementById('summaryCard').classList.add('hidden');
+            document.getElementById('errorBanner').classList.add('hidden');
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('btnLoad').disabled = true;
+
+            resetChips();
+            startTime = Date.now();
+
+            let formData = new FormData();
+            let fetchOptions = {};
+
+            if (fileChooser.files && fileChooser.files[0] && (!pathVal || pathVal === fileChooser.files[0].name)) {
+                formData.append('file', fileChooser.files[0]);
+                fetchOptions = { method: 'POST', body: formData };
+            } else {
+                fetchOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: pathVal })
+                };
+            }
+
+            fetch('/api/load', fetchOptions)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (pollTimer) clearInterval(pollTimer);
+                        pollTimer = setInterval(pollStatus, 300);
+                    } else {
+                        showError(data.error || 'Failed to initiate dataset loading.');
+                    }
+                })
+                .catch(err => { showError('Network error: ' + err.message); });
+        }
+
+        function pollStatus() {
+            fetch('/api/status')
+                .then(res => res.json())
+                .then(state => {
+                    if (state.status === 'loading') {
+                        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                        document.getElementById('liveTimer').innerText = `${elapsed} s`;
+                        document.getElementById('currentStageLabel').innerText = `(${state.current_stage || 'Processing'})`;
+                        updateStageChips(state.current_stage);
+                    } else if (state.status === 'completed') {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        document.getElementById('liveTimer').innerText = `${state.summary.total_seconds} s`;
+                        document.getElementById('currentStageLabel').innerText = '(Completed)';
+                        markAllChipsCompleted();
+                        showSummary(state.summary);
+                        updateHeaderStatus(state.summary);
+                        document.getElementById('btnLoad').disabled = false;
+                        isDatasetLoaded = true;
+                    } else if (state.status === 'error') {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        showError(state.error_message || 'An error occurred during ingestion.');
+                        document.getElementById('btnLoad').disabled = false;
+                    }
+                });
+        }
+
+        function resetChips() {
+            ['chip-Uploading', 'chip-Reading', 'chip-Indexing', 'chip-Fingerprinting'].forEach(id => {
+                document.getElementById(id).className = 'chip';
+            });
+        }
+
+        function updateStageChips(currentStage) {
+            const stages = [
+                { name: 'Uploading', id: 'chip-Uploading' },
+                { name: 'Reading & normalizing', id: 'chip-Reading' },
+                { name: 'Indexing', id: 'chip-Indexing' },
+                { name: 'Fingerprinting', id: 'chip-Fingerprinting' }
+            ];
+            let foundCurrent = false;
+            stages.forEach(st => {
+                const el = document.getElementById(st.id);
+                if (st.name === currentStage) {
+                    el.className = 'chip active';
+                    foundCurrent = true;
+                } else if (!foundCurrent) {
+                    el.className = 'chip completed';
+                } else {
+                    el.className = 'chip';
+                }
+            });
+        }
+
+        function markAllChipsCompleted() {
+            ['chip-Uploading', 'chip-Reading', 'chip-Indexing', 'chip-Fingerprinting'].forEach(id => {
+                document.getElementById(id).className = 'chip completed';
+            });
+        }
+
+        function showSummary(summary) {
+            document.getElementById('summaryCard').classList.remove('hidden');
+            document.getElementById('sumFileName').innerText = summary.file_name;
+            document.getElementById('sumRows').innerText = Number(summary.rows).toLocaleString();
+            document.getElementById('sumAccounts').innerText = Number(summary.distinct_accounts).toLocaleString();
+            document.getElementById('sumDuplicates').innerText = Number(summary.duplicate_ids).toLocaleString();
+            document.getElementById('sumDateRange').innerText = summary.date_range;
+            document.getElementById('sumSha256').innerText = summary.sha256;
+            document.getElementById('sumTotalTime').innerText = `${summary.total_seconds} s`;
+
+            const tbody = document.getElementById('stageTimingsBody');
+            tbody.innerHTML = '';
+            for (const [stage, sec] of Object.entries(summary.per_stage_seconds)) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${stage}</td><td>${sec} s</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function updateHeaderStatus(summary) {
+            isDatasetLoaded = true;
+            document.getElementById('statusBadge').className = 'badge-loaded';
+            document.getElementById('statusBadge').innerText = 'Dataset Loaded';
+
+            document.getElementById('headerDatasetItem').classList.remove('hidden');
+            document.getElementById('headerDatasetName').innerText = summary.file_name;
+
+            document.getElementById('headerRowsItem').classList.remove('hidden');
+            document.getElementById('headerRowsCount').innerText = Number(summary.rows).toLocaleString();
+
+            document.getElementById('headerTimeItem').classList.remove('hidden');
+            document.getElementById('headerLoadTime').innerText = `${summary.total_seconds} s`;
+
+            document.getElementById('btnReset').classList.remove('hidden');
+            document.getElementById('searchEmptyState').classList.add('hidden');
+            document.getElementById('traceEmptyState').classList.add('hidden');
+        }
+
+        function showError(msg) {
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('errorBanner').classList.remove('hidden');
+            document.getElementById('errorMessage').innerText = msg;
+            document.getElementById('btnLoad').disabled = false;
+        }
+
+        function resetDataset() {
+            if (!confirm('Are you sure you want to reset and clear the loaded dataset?')) return;
+            fetch('/api/reset', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => { if (data.success) location.reload(); });
+        }
+
+        // ==============================================================================
+        // STAGE 2: SEARCH LOGIC
+        // ==============================================================================
+        function quickSearch(idVal) {
+            document.getElementById('searchInput').value = idVal;
+            executeSearch();
+        }
+
+        function executeSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) { alert('Please enter an Account ID or Transaction ID.'); return; }
+
+            document.getElementById('searchNotFoundCard').classList.add('hidden');
+            document.getElementById('searchResultsSection').classList.add('hidden');
+            document.getElementById('btnSearch').disabled = true;
+
+            fetch(`/api/search?query=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(res => {
+                    document.getElementById('btnSearch').disabled = false;
+
+                    if (!res.loaded) { alert(res.error || 'No dataset loaded.'); return; }
+                    if (!res.found) {
+                        document.getElementById('notFoundTitle').innerText = `No Record Found for "${query}"`;
+                        document.getElementById('notFoundDesc').innerText = `No transactions matched this Account or Transaction ID in the loaded dataset. (${res.time_ms} ms)`;
+                        const sugContainer = document.getElementById('suggestionPillsContainer');
+                        sugContainer.innerHTML = '';
+                        if (res.suggestions && res.suggestions.length > 0) {
+                            res.suggestions.forEach(sug => {
+                                const pill = document.createElement('span');
+                                pill.className = 'suggestion-pill';
+                                pill.innerText = sug;
+                                pill.onclick = () => quickSearch(sug);
+                                sugContainer.appendChild(pill);
+                            });
+                        }
+                        document.getElementById('searchNotFoundCard').classList.remove('hidden');
+                        return;
+                    }
+
+                    document.getElementById('searchResultsSection').classList.remove('hidden');
+                    document.getElementById('resAccountTitle').innerText = res.target_account;
+                    document.getElementById('resTimeMs').innerText = `Search completed in ${res.time_ms} ms`;
+
+                    if (res.resolved_from_txn) {
+                        document.getElementById('resResolvedBadge').classList.remove('hidden');
+                        document.getElementById('resResolvedBadge').innerText = `Resolved from Txn ID: ${res.resolved_from_txn}`;
+                    } else {
+                        document.getElementById('resResolvedBadge').classList.add('hidden');
+                    }
+
+                    const riskBadge = document.getElementById('resRiskBadge');
+                    riskBadge.className = `band-${res.risk_band}`;
+                    riskBadge.innerText = `Risk Score: ${res.risk_score}/100 (${res.risk_band})`;
+
+                    const flagsContainer = document.getElementById('resFlagsContainer');
+                    flagsContainer.innerHTML = '';
+                    if (res.flags && res.flags.length > 0) {
+                        document.getElementById('resFlagsCard').classList.remove('hidden');
+                        res.flags.forEach(f => {
+                            const div = document.createElement('div');
+                            div.className = `flag-item flag-${res.risk_band}`;
+                            div.innerHTML = `<div class="flag-code"><span>${f.code}</span><span class="flag-pts">+${f.points} pts</span></div><div class="flag-reason">${f.reason}</div>`;
+                            flagsContainer.appendChild(div);
+                        });
+                    }
+
+                    const stats = res.stats;
+                    document.getElementById('resTotalIn').innerText = `₹${stats.total_in.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('resCountIn').innerText = `${stats.count_in.toLocaleString()} txns`;
+                    document.getElementById('resTotalOut').innerText = `₹${stats.total_out.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('resCountOut').innerText = `${stats.count_out.toLocaleString()} txns`;
+
+                    const netFlow = stats.total_in - stats.total_out;
+                    const netFlowEl = document.getElementById('resNetFlow');
+                    netFlowEl.innerText = `₹${Math.abs(netFlow).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    netFlowEl.style.color = netFlow >= 0 ? 'var(--in-color)' : 'var(--out-color)';
+
+                    document.getElementById('resCounterparties').innerText = stats.distinct_counterparties.toLocaleString();
+                    document.getElementById('resActivityWindow').innerText = (stats.first_activity && stats.last_activity) ? `${stats.first_activity}  ➔  ${stats.last_activity}` : 'No activity dates';
+
+                    document.getElementById('resTxnCountBadge').innerText = `Showing ${res.transactions.length.toLocaleString()} transactions`;
+                    const tbody = document.getElementById('txnTableBody');
+                    tbody.innerHTML = '';
+                    res.transactions.forEach(t => {
+                        const tr = document.createElement('tr');
+                        const isIN = t.direction === 'IN';
+                        tr.innerHTML = `
+                            <td class="mono" style="font-weight: 600;">${t.txn_id}</td>
+                            <td>${t.timestamp}</td>
+                            <td><span class="${isIN ? 'badge-in' : 'badge-out'}">${t.direction}</span></td>
+                            <td class="mono"><a href="#" onclick="quickSearch('${t.counterparty}'); return false;" style="color: var(--text-primary); text-decoration: underline;">${t.counterparty}</a></td>
+                            <td class="mono">${t.counterparty_ifsc}</td>
+                            <td style="font-weight: 700; color: ${isIN ? 'var(--in-color)' : 'var(--text-primary)'};">₹${t.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td><span style="background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 2px 6px; border-radius: 4px; font-size: 11px;">${t.payment_mode}</span></td>
+                            <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis;" title="${t.narration}">${t.narration}</td>
+                            <td class="mono">${t.ip_address}</td>
+                            <td>${t.device_type}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+        }
+
+        // ==============================================================================
+        // STAGE 5: TRACE GRAPH, REPLAY SLIDER & CASE DIARY
+        // ==============================================================================
+        function quickTrace(victimVal) {
+            document.getElementById('traceInput').value = victimVal;
+            executeTrace();
+        }
+
+        function executeTrace() {
+            const query = document.getElementById('traceInput').value.trim();
+            if (!query) { alert('Please enter a Victim Account ID or Transaction ID.'); return; }
+
+            document.getElementById('traceWorkspaceSection').classList.add('hidden');
+            document.getElementById('btnTrace').disabled = true;
+
+            fetch(`/api/trace?query=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(res => {
+                    document.getElementById('btnTrace').disabled = false;
+
+                    if (!res.loaded) { alert(res.error || 'No dataset loaded.'); return; }
+                    if (!res.found) { alert(res.message || 'No account or transactions found for trace.'); return; }
+
+                    currentTraceData = res;
+                    document.getElementById('traceWorkspaceSection').classList.remove('hidden');
+                    document.getElementById('btnOpenReport').classList.remove('hidden');
+                    document.getElementById('traceHeaderPill').innerText = `Trace completed in ${res.time_sec} s`;
+
+                    const sum = res.summary;
+                    document.getElementById('leftVictimId').innerText = res.victim_account;
+                    document.getElementById('leftAmtSent').innerText = `₹${sum.amount_sent_by_victim.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('leftAmtCashout').innerText = `₹${sum.amount_reaching_cashout.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('leftAmtHeld').innerText = `₹${sum.amount_still_held.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    document.getElementById('leftGraphCount').innerText = `${sum.total_nodes} Nodes / ${sum.total_edges} Edges`;
+
+                    // Populate Accounts per Layer
+                    const layerCounts = { 'L0': 0, 'L1': 0, 'L2': 0, 'L3': 0 };
+                    res.nodes.forEach(n => {
+                        const lKey = n.layer in layerCounts ? n.layer : 'L3';
+                        layerCounts[lKey]++;
+                    });
+                    const layerContainer = document.getElementById('layerBreakdownContainer');
+                    layerContainer.innerHTML = `
+                        <div style="display:flex; justify-content:space-between;"><span>L0 (Victim):</span><b>${layerCounts['L0']}</b></div>
+                        <div style="display:flex; justify-content:space-between;"><span>L1 (Hop 1 Mules):</span><b>${layerCounts['L1']}</b></div>
+                        <div style="display:flex; justify-content:space-between;"><span>L2 (Hop 2 Mules):</span><b>${layerCounts['L2']}</b></div>
+                        <div style="display:flex; justify-content:space-between;"><span>L3 (Hop 3+ Mules):</span><b>${layerCounts['L3']}</b></div>
+                    `;
+
+                    // Populate Freeze First List
+                    const freezeList = document.getElementById('freezeFirstList');
+                    freezeList.innerHTML = '';
+                    const freezeCandidates = res.nodes.filter(n => n.hop > 0 && (n.held > 0 || n.risk_score >= 50));
+                    freezeCandidates.sort((a, b) => b.risk_score - a.risk_score);
+                    freezeCandidates.forEach(n => {
+                        const item = document.createElement('div');
+                        item.className = 'freeze-item';
+                        item.onclick = () => selectNode(n.id);
+                        item.innerHTML = `
+                            <div>
+                                <span class="mono" style="font-weight:700;">${n.id}</span>
+                                <div style="font-size:10px; color: var(--text-muted);">${n.bank}</div>
+                            </div>
+                            <span class="band-${n.risk_band}">${n.risk_score} pts</span>
+                        `;
+                        freezeList.appendChild(item);
+                    });
+
+                    // Init Timestamps for Replay Slider
+                    traceTimestamps = Array.from(new Set(res.edges.map(e => e.time))).sort();
+                    const slider = document.getElementById('timeSlider');
+                    slider.min = 0;
+                    slider.max = Math.max(0, traceTimestamps.length - 1);
+                    slider.value = slider.max;
+                    onSliderInput(slider.value);
+
+                    // Render SVG Graph
+                    renderSvgGraph(res.nodes, res.edges);
+
+                    // Select Victim Node by default
+                    selectNode(res.victim_account);
+                });
+        }
+
+        // ==============================================================================
+        // SVG GRAPH RENDERING (Litmaps-Style Flow)
+        // ==============================================================================
+        function renderSvgGraph(nodes, edges, maxTime = null) {
+            const svg = document.getElementById('graphSvg');
+            const nodesGroup = document.getElementById('nodesGroup');
+            const edgesGroup = document.getElementById('edgesGroup');
+
+            nodesGroup.innerHTML = '';
+            edgesGroup.innerHTML = '';
+
+            // Filter edges by maxTime if provided
+            let activeEdges = edges;
+            if (maxTime) {
+                activeEdges = edges.filter(e => e.time <= maxTime);
+            }
+
+            const visibleNodeIds = new Set(activeEdges.map(e => e.from).concat(activeEdges.map(e => e.to)));
+            if (nodes.length > 0) visibleNodeIds.add(nodes[0].id);
+
+            // Group nodes by layer
+            const layerCols = { 'L0': [], 'L1': [], 'L2': [], 'L3': [] };
+            nodes.forEach(n => {
+                if (visibleNodeIds.has(n.id)) {
+                    const lKey = n.layer in layerCols ? n.layer : 'L3';
+                    layerCols[lKey].push(n);
+                }
+            });
+
+            // Calculate SVG coordinates per column
+            const colX = { 'L0': 80, 'L1': 240, 'L2': 400, 'L3': 560 };
+            const nodePos = {};
+
+            Object.keys(layerCols).forEach(lKey => {
+                const colNodes = layerCols[lKey];
+                colNodes.sort((a, b) => (a.first_time || '').localeCompare(b.first_time || ''));
+                const count = colNodes.length;
+                const spacing = Math.min(60, 440 / Math.max(1, count));
+                const startY = 60 + (480 - count * spacing) / 2;
+
+                colNodes.forEach((n, idx) => {
+                    nodePos[n.id] = {
+                        x: colX[lKey],
+                        y: startY + idx * spacing,
+                        data: n
+                    };
+                });
+            });
+
+            // Draw Edges
+            activeEdges.forEach(e => {
+                const src = nodePos[e.from];
+                const dst = nodePos[e.to];
+                if (src && dst) {
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const dx = dst.x - src.x;
+                    const d = `M ${src.x} ${src.y} C ${src.x + dx/2} ${src.y}, ${dst.x - dx/2} ${dst.y}, ${dst.x} ${dst.y}`;
+                    path.setAttribute('d', d);
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('stroke', e.is_round_trip ? '#dc2626' : '#8ca89f');
+                    path.setAttribute('stroke-width', e.is_round_trip ? '2.5' : '1.8');
+                    path.setAttribute('marker-end', 'url(#arrowhead)');
+                    path.setAttribute('class', `edge-path edge-from-${e.from} edge-to-${e.to}`);
+                    
+                    // Hover Tooltip on Edge
+                    path.onmouseover = (evt) => showTooltip(evt, `Txn: ${e.txn_id}<br>Amount: ₹${e.amount.toLocaleString()}<br>Time: ${e.time}<br>Mode: ${e.mode}`);
+                    path.onmouseout = hideTooltip;
+
+                    edgesGroup.appendChild(path);
+                }
+            });
+
+            // Draw Nodes
+            Object.values(nodePos).forEach(pos => {
+                const n = pos.data;
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `node-g node-${n.id}`);
+                g.onclick = () => selectNode(n.id);
+
+                // Radius proportional to amount
+                const r = Math.max(14, Math.min(26, 14 + Math.sqrt(n.received + n.forwarded) / 100));
+
+                // Layer colors
+                let fill = '#3ecfa4';
+                if (n.layer === 'L0') fill = '#12332b';
+                else if (n.layer === 'L1') fill = '#2ab58c';
+                else if (n.layer === 'L2') fill = '#3ecfa4';
+                else fill = '#8ce9ce';
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', r);
+                circle.setAttribute('fill', fill);
+
+                if (n.is_cashout) {
+                    circle.setAttribute('stroke', '#dc2626');
+                    circle.setAttribute('stroke-width', '3.5');
+                } else {
+                    circle.setAttribute('stroke', '#ffffff');
+                    circle.setAttribute('stroke-width', '2');
+                }
+
+                // Node Label (Last 4 chars of ID)
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', n.layer === 'L0' ? '#ffffff' : '#12332b');
+                text.setAttribute('font-size', '10px');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('class', 'mono');
+                text.textContent = n.id.slice(-4);
+
+                g.appendChild(circle);
+                g.appendChild(text);
+
+                g.onmouseover = (evt) => showTooltip(evt, `Account: ${n.id}<br>Bank: ${n.bank}<br>Layer: ${n.layer}<br>Risk: ${n.risk_score}/100 (${n.risk_band})`);
+                g.onmouseout = hideTooltip;
+
+                nodesGroup.appendChild(g);
+            });
+        }
+
+        // Tooltip Functions
+        function showTooltip(evt, htmlContent) {
+            const tooltip = document.getElementById('svgTooltip');
+            tooltip.innerHTML = htmlContent;
+            tooltip.style.opacity = '1';
+            const rect = document.querySelector('.svg-container').getBoundingClientRect();
+            tooltip.style.left = (evt.clientX - rect.left + 12) + 'px';
+            tooltip.style.top = (evt.clientY - rect.top + 12) + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('svgTooltip').style.opacity = '0';
+        }
+
+        // Select Node in Right Panel
+        function selectNode(accId) {
+            selectedNodeId = accId;
+            if (!currentTraceData) return;
+            const node = currentTraceData.nodes.find(n => n.id === accId);
+            if (!node) return;
+
+            document.getElementById('rightAccId').innerText = node.id;
+            document.getElementById('rightBankName').innerText = node.bank;
+            document.getElementById('rightIfsc').innerText = node.ifsc;
+            document.getElementById('rightLayer').innerText = `${node.layer} (Hop ${node.hop})`;
+
+            const riskBadge = document.getElementById('rightRiskBadge');
+            riskBadge.className = `band-${node.risk_band}`;
+            riskBadge.innerText = `${node.risk_score} (${node.risk_band})`;
+
+            document.getElementById('rightAmtReceived').innerText = `₹${node.received.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+            document.getElementById('rightAmtForwarded').innerText = `₹${node.forwarded.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+            const flagsList = document.getElementById('rightFlagsList');
+            flagsList.innerHTML = '';
+            if (node.flags && node.flags.length > 0) {
+                node.flags.forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = `flag-item flag-${node.risk_band}`;
+                    div.innerHTML = `<div class="flag-code"><span>${f.code}</span><span class="flag-pts">+${f.points} pts</span></div><div class="flag-reason">${f.reason}</div>`;
+                    flagsList.appendChild(div);
+                });
+            } else {
+                flagsList.innerHTML = '<div style="font-size: 12px; color: var(--text-secondary);">No red flags triggered for this node.</div>';
+            }
+        }
+
+        // Isolate Connected Ring
+        function isolateSelectedRing() {
+            if (!selectedNodeId || !currentTraceData) return;
+            const connNodes = new Set([selectedNodeId]);
+            currentTraceData.edges.forEach(e => {
+                if (e.from === selectedNodeId) connNodes.add(e.to);
+                if (e.to === selectedNodeId) connNodes.add(e.from);
+            });
+
+            document.querySelectorAll('.node-g').forEach(el => {
+                const id = el.getAttribute('class').replace('node-g node-', '');
+                el.style.opacity = connNodes.has(id) ? '1' : '0.15';
+            });
+
+            document.querySelectorAll('.edge-path').forEach(el => {
+                const isConn = el.getAttribute('class').includes(`edge-from-${selectedNodeId}`) || el.getAttribute('class').includes(`edge-to-${selectedNodeId}`);
+                el.style.opacity = isConn ? '1' : '0.08';
+            });
+        }
+
+        function resetIsolation() {
+            document.querySelectorAll('.node-g').forEach(el => el.style.opacity = '1');
+            document.querySelectorAll('.edge-path').forEach(el => el.style.opacity = '1');
+        }
+
+        // Time Slider Replay Controls
+        function onSliderInput(val) {
+            if (!traceTimestamps || traceTimestamps.length === 0) return;
+            const idx = parseInt(val);
+            const targetTime = traceTimestamps[idx];
+            document.getElementById('sliderTimeLabel').innerText = targetTime || 'All Time';
+            if (currentTraceData) {
+                renderSvgGraph(currentTraceData.nodes, currentTraceData.edges, targetTime);
+            }
+        }
+
+        function togglePlayReplay() {
+            const btn = document.getElementById('btnPlay');
+            const slider = document.getElementById('timeSlider');
+            if (isPlaying) {
+                isPlaying = false;
+                clearInterval(playInterval);
+                btn.innerText = '▶';
+            } else {
+                isPlaying = true;
+                btn.innerText = '❚❚';
+                if (parseInt(slider.value) >= parseInt(slider.max)) slider.value = 0;
+
+                playInterval = setInterval(() => {
+                    let cur = parseInt(slider.value);
+                    if (cur < parseInt(slider.max)) {
+                        slider.value = cur + 1;
+                        onSliderInput(slider.value);
+                    } else {
+                        isPlaying = false;
+                        clearInterval(playInterval);
+                        btn.innerText = '▶';
+                    }
+                }, 400);
+            }
+        }
+
+        // Open Case Report Window
+        function openCaseReport() {
+            if (!currentTraceData) return;
+            window.open(`/report?victim=${encodeURIComponent(currentTraceData.victim_account)}`, '_blank');
+        }
+
+        // Export Trace CSV
+        function exportTraceCSV() {
+            if (!currentTraceData) return;
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Type,From_Account,To_Account,Amount,Timestamp,Txn_ID,Payment_Mode,Layer,Risk_Score,Risk_Band\n";
+
+            currentTraceData.edges.forEach(e => {
+                csvContent += `Edge,${e.from},${e.to},${e.amount},${e.time},${e.txn_id},${e.mode},,\n`;
+            });
+            currentTraceData.nodes.forEach(n => {
+                csvContent += `Node,${n.id},,${n.received},${n.first_time || ''},,,${n.layer},${n.risk_score},${n.risk_band}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Trace_${currentTraceData.victim_account}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Fetch Initial Dataset Info on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/dataset_info')
+                .then(res => res.json())
+                .then(info => {
+                    if (info.loaded) {
+                        isDatasetLoaded = true;
+                        fetch('/api/status')
+                            .then(res => res.json())
+                            .then(state => {
+                                if (state.summary) {
+                                    updateHeaderStatus(state.summary);
+                                    showSummary(state.summary);
+                                    document.getElementById('progressSection').classList.remove('hidden');
+                                    markAllChipsCompleted();
+                                    document.getElementById('liveTimer').innerText = `${state.summary.total_seconds} s`;
+                                    document.getElementById('currentStageLabel').innerText = '(Completed)';
+                                }
+                            });
+                    }
+                });
+        });
+    </script>
+</body>
+</html>
